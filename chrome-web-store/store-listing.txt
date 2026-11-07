@@ -1,0 +1,59 @@
+CHROME WEB STORE LISTING: Tab Group from CLI 1.0.0
+Copy each block into the matching field in the Developer Dashboard.
+
+== Store listing tab ==
+
+Name:
+Tab Group from CLI
+
+Summary (max 132 chars):
+Open any number of links in a named tab group with one terminal command.
+
+Category:
+Workflow & Planning
+
+Language:
+English
+
+Description:
+Chrome can open links from the command line, but it can't put them in a tab group. Tab Group from CLI adds that.
+
+Run one command with a group name and any number of links. Chrome opens them in order, puts them in a tab group with that name, and can set a color or start the group collapsed. It works whether Chrome is already open or not.
+
+Examples:
+  tabgroup "Sprint review" https://tracker.example.com https://code.example.com
+  tabgroup -c blue -C "Reading" https://a.example.com https://b.example.com
+
+Colors: grey, blue, red, yellow, green, pink, purple, cyan, orange.
+
+The small command-line helper (macOS, Linux and Windows) is available at:
+https://github.com/kercsoj/chrome_tabgroup
+
+How it works: the helper opens a special http://tabgroup.localhost/ address that holds the group name and links. The extension reads only that address, opens the links, groups them and closes the helper tab. It can't see your other tabs, collects no data and makes no network requests of its own.
+
+Graphics:
+  Store icon: store-icon-128.png
+  Screenshot: screenshot-1280x800.png
+
+== Privacy practices tab ==
+
+Single purpose:
+Opens a list of links passed from the command line in a named Chrome tab group.
+
+Permission justification: tabGroups
+Needed to give the new group the name, color and collapsed state the user asked for.
+
+Permission justification: host permission *://tabgroup.localhost/*
+The command-line helper sends the group name and links through a tabgroup.localhost address. Access is limited to that one host so the extension can read the request and close the helper tab. It can't read any other site or tab.
+
+Remote code:
+No, I am not using remote code.
+
+Data usage:
+Tick none of the data types. Tick all three certifications (no selling or transfer of data, no unrelated use, no creditworthiness use).
+
+Privacy policy URL:
+https://github.com/kercsoj/chrome_tabgroup/blob/main/PRIVACY.md
+
+Policy text (already in PRIVACY.md):
+Tab Group from CLI collects, stores and shares no personal or browsing data. It reads only http://tabgroup.localhost/ addresses that you open yourself, and it makes no network requests of its own.
