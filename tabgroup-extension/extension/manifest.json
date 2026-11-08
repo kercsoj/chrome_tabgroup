@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Group from CLI",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Open any number of links in a named tab group with one terminal command.",
   "permissions": ["tabGroups"],
   "host_permissions": ["*://tabgroup.localhost/*"],

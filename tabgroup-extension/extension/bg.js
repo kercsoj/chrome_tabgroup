@@ -27,13 +27,30 @@ async function handle(tabId, rawUrl) {
   if (urls.length) {
     const tabIds = [];
     for (const url of urls) {
-      const tab = await chrome.tabs.create({ url, windowId, active: tabIds.length === 0 });
+      const tab = await chrome.tabs.create({ url, windowId, active: !collapsed && tabIds.length === 0 });
       tabIds.push(tab.id);
     }
     const groupId = await chrome.tabs.group({ tabIds });
-    const props = { title: name, collapsed };
+    const props = { title: name };
     if (color) props.color = color;
     await chrome.tabGroups.update(groupId, props);
+
+    if (collapsed) {
+      // Chrome won't collapse a group while one of its tabs is active,
+      // so make a tab outside the group active before collapsing.
+      const others = (await chrome.tabs.query({ windowId }))
+        .filter((t) => t.id !== tabId && t.groupId !== groupId)
+        .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+      if (others.length) {
+        await chrome.tabs.update(others[0].id, { active: true });
+        await chrome.tabs.remove(tabId).catch(() => {});
+      } else {
+        // Only the helper tab is outside the group: turn it into a new tab page.
+        await chrome.tabs.update(tabId, { url: "chrome://newtab/", active: true });
+      }
+      await chrome.tabGroups.update(groupId, { collapsed: true });
+      return;
+    }
   }
 
   await chrome.tabs.remove(tabId).catch(() => {});
