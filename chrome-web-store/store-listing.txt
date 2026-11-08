@@ -1,4 +1,4 @@
-CHROME WEB STORE LISTING: Tab Group from CLI 1.0.0
+CHROME WEB STORE LISTING: Tab Group from CLI 1.0.2
 Copy each block into the matching field in the Developer Dashboard.
 
 == Store listing tab ==
@@ -42,6 +42,9 @@ Opens a list of links passed from the command line in a named Chrome tab group.
 
 Permission justification: tabGroups
 Needed to give the new group the name, color and collapsed state the user asked for.
+
+Permission justification: storage
+Keeps the IDs of the last few active tabs for this browser session only (session storage, cleared when Chrome closes). When a group is opened collapsed, the extension uses them to return the user to the page they were on. No URLs or page content are stored.
 
 Permission justification: host permission *://tabgroup.localhost/*
 The command-line helper sends the group name and links through a tabgroup.localhost address. Access is limited to that one host so the extension can read the request and close the helper tab. It can't read any other site or tab.

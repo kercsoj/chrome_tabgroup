@@ -36,16 +36,14 @@ async function handle(tabId, rawUrl) {
     await chrome.tabGroups.update(groupId, props);
 
     if (collapsed) {
-      // Chrome won't collapse a group while one of its tabs is active,
-      // so make a tab outside the group active before collapsing.
-      const others = (await chrome.tabs.query({ windowId }))
-        .filter((t) => t.id !== tabId && t.groupId !== groupId)
-        .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
-      if (others.length) {
-        await chrome.tabs.update(others[0].id, { active: true });
+      // Chrome won't collapse a group while one of its tabs is active.
+      // Go back to the page that was active before the helper tab opened.
+      const back = await tabToReturnTo(windowId, tabId, groupId);
+      if (back) {
+        await chrome.tabs.update(back.id, { active: true });
         await chrome.tabs.remove(tabId).catch(() => {});
       } else {
-        // Only the helper tab is outside the group: turn it into a new tab page.
+        // No safe tab to return to: turn the helper tab into a new tab page.
         await chrome.tabs.update(tabId, { url: "chrome://newtab/", active: true });
       }
       await chrome.tabGroups.update(groupId, { collapsed: true });
@@ -55,6 +53,32 @@ async function handle(tabId, rawUrl) {
 
   await chrome.tabs.remove(tabId).catch(() => {});
 }
+
+// Picks the tab to show after creating a collapsed group. Never picks a tab
+// inside a collapsed group, because activating it would expand that group.
+async function tabToReturnTo(windowId, triggerId, newGroupId) {
+  const tabs = await chrome.tabs.query({ windowId });
+  const collapsedGroups = new Set(
+    (await chrome.tabGroups.query({ windowId, collapsed: true })).map((g) => g.id)
+  );
+  const usable = (t) => t && t.id !== triggerId && t.groupId !== newGroupId && !collapsedGroups.has(t.groupId);
+
+  const key = "active-" + windowId;
+  const { [key]: recent = [] } = await chrome.storage.session.get(key);
+  for (const id of recent) {
+    const t = tabs.find((x) => x.id === id);
+    if (usable(t)) return t;
+  }
+  return tabs.filter(usable).sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+}
+
+// Remember the last few active tabs per window.
+chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
+  const key = "active-" + windowId;
+  const { [key]: recent = [] } = await chrome.storage.session.get(key);
+  if (recent[0] === tabId) return;
+  await chrome.storage.session.set({ [key]: [tabId, ...recent.filter((id) => id !== tabId)].slice(0, 5) });
+});
 
 // Chrome already running: URL is only visible for tabgroup.localhost tabs.
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
